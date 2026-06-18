@@ -8,6 +8,7 @@ lazy val microservice = Project("country-by-country-reporting", file("."))
   .settings(
     PlayKeys.playDefaultPort := 10022,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
+    maintainer := "PLACEHOLDER@digital.hmrc.gov.uk",
     Compile / scalafmtOnCompile                                := true,
     Test / scalafmtOnCompile                                   := true,
     ThisBuild / scalafmtOnCompile.withRank(KeyRanks.Invisible) := true,
@@ -23,6 +24,7 @@ lazy val microservice = Project("country-by-country-reporting", file("."))
     scalacOptions := scalacOptions.value.distinct
   )
   .settings(inConfig(Test)(testSettings): _*)
+  .settings(Test / javaOptions += "-XX:+EnableDynamicAgentLoading")
   .settings(resolvers += Resolver.mavenCentral)
   .settings(CodeCoverageSettings.settings: _*)
   .settings(
