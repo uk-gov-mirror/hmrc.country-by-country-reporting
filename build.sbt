@@ -43,5 +43,6 @@ lazy val it = project
     DefaultBuildSettings.itSettings(),
     scalacOptions := scalacOptions.value.distinct
   )
+  .settings(Test / javaOptions += "-XX:+EnableDynamicAgentLoading")
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
 addCommandAlias("testAll", "; test ; it/test")
