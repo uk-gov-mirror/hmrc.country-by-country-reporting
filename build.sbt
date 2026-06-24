@@ -46,3 +46,7 @@ lazy val it = project
   .settings(Test / javaOptions += "-XX:+EnableDynamicAgentLoading")
   .settings(libraryDependencies ++= AppDependencies.itDependencies)
 addCommandAlias("testAll", "; test ; it/test")
+addCommandAlias(
+  "precommit",
+  "; clean ; scalafmtAll ; coverage ; test ; it/test ; coverageReport ; coverageOff"
+)
