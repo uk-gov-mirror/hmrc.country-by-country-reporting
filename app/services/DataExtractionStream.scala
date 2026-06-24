@@ -69,20 +69,20 @@ class DataExtractionStream @Inject() (implicit ec: ExecutionContext) {
   }
 
   final private case class Accumulator(
-    var messageRefId: Option[String] = None,
-    var messageTypeIndic: Option[MessageTypeIndic] = None,
-    var reportingEntityName: Option[String] = None,
-    var startDate: Option[LocalDate] = None,
-    var endDate: Option[LocalDate] = None,
-    allDocTypeIndicators: mutable.ListBuffer[String] = mutable.ListBuffer.empty,
-    reportingEntityDocTypeIndicators: mutable.ListBuffer[String] = mutable.ListBuffer.empty,
-    var seenCbcReports: Boolean = false,
-    var seenAdditionalInfo: Boolean = false,
-    var sectionDocTypeIndicators: mutable.ListBuffer[String] = mutable.ListBuffer.empty
+    messageRefId: Option[String] = None,
+    messageTypeIndic: Option[MessageTypeIndic] = None,
+    reportingEntityName: Option[String] = None,
+    startDate: Option[LocalDate] = None,
+    endDate: Option[LocalDate] = None,
+    allDocTypeIndicators: List[String] = List.empty,
+    reportingEntityDocTypeIndicators: List[String] = List.empty,
+    seenCbcReports: Boolean = false,
+    seenAdditionalInfo: Boolean = false,
+    sectionDocTypeIndicators: List[String] = List.empty
   )
 
   final private class MessageSpecHandler extends DefaultHandler {
-    private val acc                = Accumulator()
+    private var acc                = Accumulator()
     private var path: List[String] = Nil
     private val text               = new StringBuilder
 
@@ -99,8 +99,8 @@ class DataExtractionStream @Inject() (implicit ec: ExecutionContext) {
       text.clear()
 
       name match {
-        case "CbcReports"     => acc.seenCbcReports = true
-        case "AdditionalInfo" => acc.seenAdditionalInfo = true
+        case "CbcReports"     => acc = acc.copy(seenCbcReports = true)
+        case "AdditionalInfo" => acc = acc.copy(seenAdditionalInfo = true)
         case _                =>
       }
     }
@@ -116,34 +116,33 @@ class DataExtractionStream @Inject() (implicit ec: ExecutionContext) {
       val value = text.toString.trim
       path match {
         case "MessageRefId" :: _ if value.nonEmpty =>
-          acc.messageRefId = Some(value)
+          acc = acc.copy(messageRefId = Some(value))
 
         case "MessageTypeIndic" :: _ if value.nonEmpty =>
-          acc.messageTypeIndic = Some(MessageTypeIndic.fromString(value))
+          acc = acc.copy(messageTypeIndic = Some(MessageTypeIndic.fromString(value)))
 
         case "Name" :: "Entity" :: "ReportingEntity" :: _ if value.nonEmpty =>
-          acc.reportingEntityName = Some(value)
+          acc = acc.copy(reportingEntityName = Some(value))
 
         case "StartDate" :: "ReportingPeriod" :: _ if value.nonEmpty =>
-          acc.startDate = Some(LocalDate.parse(value))
+          acc = acc.copy(startDate = Some(LocalDate.parse(value)))
 
         case "EndDate" :: "ReportingPeriod" :: _ if value.nonEmpty =>
-          acc.endDate = Some(LocalDate.parse(value))
+          acc = acc.copy(endDate = Some(LocalDate.parse(value)))
 
         case "DocTypeIndic" :: "DocSpec" :: "ReportingEntity" :: _ if value.nonEmpty =>
-          acc.reportingEntityDocTypeIndicators += value
-          acc.allDocTypeIndicators += value
+          acc = acc.copy(reportingEntityDocTypeIndicators = acc.reportingEntityDocTypeIndicators ++ List(value),
+                         allDocTypeIndicators = acc.allDocTypeIndicators ++ List(value)
+          )
 
         case "DocTypeIndic" :: "DocSpec" :: "AdditionalInfo" :: _ if value.nonEmpty =>
-          acc.sectionDocTypeIndicators += value
-          acc.allDocTypeIndicators += value
+          acc = acc.copy(sectionDocTypeIndicators = acc.sectionDocTypeIndicators ++ List(value), allDocTypeIndicators = acc.allDocTypeIndicators ++ List(value))
 
         case "DocTypeIndic" :: "DocSpec" :: "CbcReports" :: _ if value.nonEmpty =>
-          acc.sectionDocTypeIndicators += value
-          acc.allDocTypeIndicators += value
+          acc = acc.copy(sectionDocTypeIndicators = acc.sectionDocTypeIndicators ++ List(value), allDocTypeIndicators = acc.allDocTypeIndicators ++ List(value))
 
         case "DocTypeIndic" :: _ if value.nonEmpty =>
-          acc.allDocTypeIndicators += value
+          acc = acc.copy(allDocTypeIndicators = acc.allDocTypeIndicators ++ List(value))
 
         case _ =>
       }
