@@ -19,21 +19,22 @@ package utils
 import java.time.format.DateTimeFormatter
 import java.time._
 import scala.util.Try
+import java.util.Locale
 
 object DateTimeFormatUtil {
 
   private val euLondonZoneId: ZoneId                    = ZoneId.of("Europe/London")
   private val auditDateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
-  val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy")
-  val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mma")
+  val dateFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.UK)
+  val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mma", Locale.UK)
 
   def zonedDateTimeNow(implicit clock: Clock): ZonedDateTime = ZonedDateTime.now(clock.withZone(euLondonZoneId))
 
   val dateInputFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   def displayFormattedDate(dateTime: LocalDateTime): String =
-    s"${dateTime.atZone(euLondonZoneId).format(timeFormatter)} on ${dateTime.atZone(euLondonZoneId).format(dateFormatter).capitalize}"
+    s"${dateTime.atZone(euLondonZoneId).format(timeFormatter)} on ${dateTime.atZone(euLondonZoneId).format(dateFormatter)}"
 
   def formattedDateForAudit(dateTime: LocalDateTime): String =
     auditDateTimeFormatter.withZone(ZoneOffset.UTC).format(dateTime)
