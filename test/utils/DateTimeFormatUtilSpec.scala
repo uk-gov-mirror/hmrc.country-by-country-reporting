@@ -18,6 +18,8 @@ package utils
 
 import base.SpecBase
 
+import java.time.LocalDateTime
+
 class DateTimeFormatUtilSpec extends SpecBase {
 
   "DateTimeFormatUtil" - {
@@ -45,6 +47,15 @@ class DateTimeFormatUtilSpec extends SpecBase {
       val optionalDateString: Option[String] = None
 
       DateTimeFormatUtil.convertOptionalStringToDisplayDate(optionalDateString) mustEqual None
+    }
+    "displayFormattedDate" - {
+      "must format a localdatetime as expected (HH:MMam on DD Month YYYY)" in {
+        val ldt      = LocalDateTime.of(2023, 3, 20, 11, 14)
+        val expected = "11:14am on 20 March 2023"
+
+        DateTimeFormatUtil.displayFormattedDate(ldt) mustEqual expected
+
+      }
     }
   }
 
