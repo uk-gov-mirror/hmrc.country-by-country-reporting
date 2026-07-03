@@ -16,7 +16,6 @@
 
 package controllers
 
-import config.AppConfig
 import controllers.actions.EISResponsePreConditionCheckActionRefiner
 import controllers.auth.ValidateAuthTokenAction
 import models.audit.{Audit, AuditDetailForEISResponse, AuditType}
@@ -41,7 +40,6 @@ class EISResponseController @Inject() (
   actionRefiner: EISResponsePreConditionCheckActionRefiner,
   fileDetailsRepository: FileDetailsRepository,
   emailService: EmailService,
-  appConfig: AppConfig,
   customAlertUtil: CustomAlertUtil,
   auditService: AuditService
 )(implicit ec: ExecutionContext)
@@ -82,10 +80,8 @@ class EISResponseController @Inject() (
       case true =>
         fileDetailsRepository.updateStatus(conversationId, fileStatus) map {
           case Some(updatedFileDetails) =>
-            val fastJourney = updatedFileDetails.lastUpdated.isBefore(updatedFileDetails.submitted.plusSeconds(appConfig.eisResponseWaitTime))
-
-            (fastJourney, updatedFileDetails.status) match {
-              case (_, FileStatusAccepted) | (false, Rejected(_)) =>
+            updatedFileDetails.status match {
+              case FileStatusAccepted | Rejected(_) =>
                 emailService.sendAndLogEmail(
                   updatedFileDetails.subscriptionId,
                   DateTimeFormatUtil.displayFormattedDate(updatedFileDetails.submitted),

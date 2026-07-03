@@ -259,64 +259,7 @@ class EISResponseControllerSpec extends SpecBase with BeforeAndAfterEach {
       status(result) mustEqual FORBIDDEN
     }
 
-    "must not send an email when on the fast journey and file upload is Rejected" in {
-      val fileDetails =
-        FileDetails(
-          ConversationId("conversationId123456"),
-          "subscriptionId",
-          "messageRefId",
-          "Reporting Entity",
-          TestData,
-          Rejected(ValidationErrors(None, None)),
-          "file1.xml",
-          LocalDateTime.now(),
-          LocalDateTime.now(),
-          None,
-          None,
-          None,
-          LocalDate.now(),
-          LocalDate.now()
-        )
-      when(mockFileDetailsRepository.findByConversationId(any[ConversationId])).thenReturn(Future.successful(Some(fileDetails)))
-      when(mockAuditService.sendAuditEvent(any[String], any[JsValue])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(Future.successful(Success))
-      when(mockFileDetailsRepository.updateStatus(any[String], any[FileStatus])).thenReturn(Future.successful(Some(fileDetails)))
-      when(
-        mockEmailService.sendAndLogEmail(any[String],
-                                         any[String],
-                                         any[String],
-                                         any[Option[AgentContactDetails]],
-                                         any[Boolean],
-                                         any[ReportType],
-                                         any[String],
-                                         any[String],
-                                         any[String]
-        )(
-          any[HeaderCarrier]
-        )
-      )
-        .thenReturn(Future.successful(Seq(ACCEPTED)))
-
-      val request = FakeRequest(POST, routes.EISResponseController.processEISResponse().url)
-        .withHeaders("x-conversation-id" -> randomUUID.toString, HeaderNames.authorisation -> s"Bearer token")
-        .withXmlBody(xml)
-
-      val result = route(application, request).value
-
-      status(result) mustEqual NO_CONTENT
-      verify(mockEmailService, times(0)).sendAndLogEmail(any[String],
-                                                         any[String],
-                                                         any[String],
-                                                         any[Option[AgentContactDetails]],
-                                                         any[Boolean],
-                                                         any[ReportType],
-                                                         any[String],
-                                                         any[String],
-                                                         any[String]
-      )(any[HeaderCarrier])
-      verify(mockAuditService, times(1)).sendAuditEvent(any[String](), any[JsValue]())(any[HeaderCarrier], any[ExecutionContext])
-    }
-
-    "must not send an email when on the fast journey and file upload is Pending" in {
+    "must not send an email when file upload is Pending" in {
       val fileDetails =
         FileDetails(
           ConversationId("conversationId123456"),
@@ -373,7 +316,7 @@ class EISResponseControllerSpec extends SpecBase with BeforeAndAfterEach {
       verify(mockAuditService, times(1)).sendAuditEvent(any[String](), any[JsValue]())(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "must send an email when on the slow journey and file upload is Accepted" in {
+    "must send an email when file upload is Accepted" in {
       val fileDetails =
         FileDetails(
           ConversationId("conversationId123456"),
@@ -430,7 +373,7 @@ class EISResponseControllerSpec extends SpecBase with BeforeAndAfterEach {
       verify(mockAuditService, times(1)).sendAuditEvent(any[String](), any[JsValue]())(any[HeaderCarrier], any[ExecutionContext])
     }
 
-    "must send an email when on the slow journey and file upload is Rejected" in {
+    "must send an email when file upload is Rejected" in {
       val fileDetails =
         FileDetails(
           ConversationId("conversationId123456"),
